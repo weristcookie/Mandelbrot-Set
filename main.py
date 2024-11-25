@@ -62,7 +62,7 @@ def calc(x: float, y: float):
     return int(count)
 
 
-def main_p():
+def main_p() -> None:
     x_coords = []
     y_coords = []
     colors = []
@@ -88,7 +88,7 @@ def main_p():
     plt.title("A Mandelbrot set visualization")
 
     plt.gca().set_facecolor('black')
-    plt.scatter(x_coords, y_coords, marker="o", s=1, c=colors, cmap='magma')
+    plt.scatter(x_coords, y_coords, marker="o", s=0.05, c=colors, cmap='magma')
 
     plt.xlabel("Real")
     plt.ylabel("Imaginary")
@@ -97,16 +97,13 @@ def main_p():
 
     plt.show()
 
-    return
 
-
-def main_t():
+def main_t(factor: int) -> None:
     for i in [x * SCALE for x in range(DIMENSION['-yf'], DIMENSION['yf'], 1)]:
         for j in [y * SCALE for y in range(DIMENSION['-xf'], DIMENSION['xf'], 1)]:
             print(get_color(calc(x=j, y=i)), end=" ")
             # print(f"{calc(x = j, y = i):003}", end=" ")
         print()
-    return
 
 
 if __name__ == "__main__":
@@ -124,6 +121,11 @@ if __name__ == "__main__":
         action='store_true',
         help='Plot using matplotlib'
     )
+    parser.add_argument(
+        '-f', '--factor',
+        type=int,
+        help='Bla'
+    )
 
     args = parser.parse_args()
 
@@ -131,6 +133,6 @@ if __name__ == "__main__":
         if not args.terminal and not args.plot or args.plot:
             main_p()
         else:
-            main_t()
+            main_t(args.factor)
     except KeyboardInterrupt:
         pass
