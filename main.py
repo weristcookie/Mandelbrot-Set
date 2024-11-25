@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 
-CONLIMIT = 50  # Limit that if exceeded defines a converging number
+CONLIMIT = 100  # Limit that if exceeded defines a converging number
 COUNTLIM = 200  # Max amount of iterations per calculation
-SCALE = 0.0085  # Scaling factor
+SCALE = 0.005  # Scaling factor
 DIM_FACTOR = 1 / SCALE  # Dimension factor
 
 DIMENSION = {  # Dimensions of the coordinate system (-x, x, -y, y)
@@ -61,7 +61,7 @@ def calc(x: float, y: float):
     return int(count)
 
 
-def main():
+def main_p():
     x_coords = []
     y_coords = []
     colors = []
@@ -87,15 +87,29 @@ def main():
     plt.title("A Mandelbrot set visualization")
 
     plt.gca().set_facecolor('black')
-    plt.scatter(x_coords, y_coords,
-                marker="o", s=1, c=colors, cmap='magma')
+    plt.scatter(x_coords, y_coords, marker="o", s=1, c=colors, cmap='magma')
 
     plt.xlabel("Real")
-    plt.ylabel("Imag")
+    plt.ylabel("Imaginary")
 
     plt.colorbar()
 
     plt.show()
+
+    return
+
+
+def main_t():
+    for i in [x * SCALE for x in range(DIMENSION['-yf'], DIMENSION['yf'], 1)]:
+        for j in [y * SCALE for y in range(DIMENSION['-xf'], DIMENSION['xf'], 1)]:
+            print(get_color(calc(x=j, y=i)), end=" ")
+            # print(f"{calc(x = j, y = i):003}", end=" ")
+        print()
+    return
+
+
+def main():
+    main_t()
 
 
 if __name__ == "__main__":
