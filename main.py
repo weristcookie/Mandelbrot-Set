@@ -1,14 +1,19 @@
 import matplotlib.pyplot as plt
 
-CONLIMIT = 100  # Limit that if exceeded defines a converging number
-COUNTLIM = 100  # Max amount of iterations per calculation
-SCALE = 0.005  # Scaling factor
+CONLIMIT = 50  # Limit that if exceeded defines a converging number
+COUNTLIM = 200  # Max amount of iterations per calculation
+SCALE = 0.0085  # Scaling factor
+DIM_FACTOR = 1 / SCALE  # Dimension factor
 
 DIMENSION = {  # Dimensions of the coordinate system (-x, x, -y, y)
-    "-x": int(-2 * 1/SCALE),
-    "x": int(2 * 1/SCALE),
-    "-y": int(-2 * 1/SCALE),
-    "y": int(2 * 1/SCALE)
+    "-x": -2,
+    "x": 2,
+    "-y": -2,
+    "y": 2,
+    "-xf": round(-2 * DIM_FACTOR),
+    "xf": round(2 * DIM_FACTOR),
+    "-yf": round(-2 * DIM_FACTOR),
+    "yf": round(2 * DIM_FACTOR),
 }
 
 COLORS = [
@@ -35,13 +40,13 @@ def to_full_width(text):
 
 def get_color(count: int) -> str:
     if count >= COUNTLIM:
-        return "\033[30m" + to_full_width("█") + RESET
+        return "\033[30m" + to_full_width(chr(0x2588)) + RESET
 
     color_index = int(count / (COUNTLIM / len(COLORS)))
 
     color_index = min(color_index, len(COLORS) - 1)
 
-    return COLORS[color_index] + to_full_width("█") + RESET
+    return COLORS[color_index] + to_full_width(chr(0x2588)) + RESET
 
 
 def calc(x: float, y: float):
@@ -59,27 +64,42 @@ def calc(x: float, y: float):
 def main():
     x_coords = []
     y_coords = []
-    for i in [x * SCALE for x in range(DIMENSION["-y"], DIMENSION["y"], 1)]:
-        for j in [y * SCALE for y in range(DIMENSION["-x"], DIMENSION["x"], 1)]:
+    colors = []
+
+    for i in [x * SCALE for x in range(DIMENSION['-yf'], DIMENSION['yf'], 1)]:
+        for j in [y * SCALE for y in range(DIMENSION['-xf'], DIMENSION['xf'], 1)]:
             # print(get_color(calc(x=j, y=i)), end=" ")
             # print(f"{calc(x = j, y = i):003}", end=" ")
             result = calc(x=j, y=i)
             if result < CONLIMIT:
                 x_coords.append(j)
                 y_coords.append(i)
+                colors.append(result)
         # print()
 
-    plt.xlim(-2, 2)
-    plt.ylim(-2, 2)
+    plt.xlim(DIMENSION['-x'], DIMENSION['x'])
+    plt.ylim(DIMENSION['-y'], DIMENSION['y'])
 
     # plt.axhline(0, color='black', linewidth=0.5)
     # plt.axvline(0, color='black', linewidth=0.5)
     # plt.grid(False, which='both')
 
     plt.title("A Mandelbrot set visualization")
-    plt.scatter(x_coords, y_coords, color='red', s=3, marker="s")
+
+    plt.gca().set_facecolor('black')
+    plt.scatter(x_coords, y_coords,
+                marker="o", s=1, c=colors, cmap='magma')
+
+    plt.xlabel("Real")
+    plt.ylabel("Imag")
+
+    plt.colorbar()
 
     plt.show()
 
 
-main()
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
