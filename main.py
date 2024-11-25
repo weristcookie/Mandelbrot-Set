@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 CONLIMIT = 100  # Limit that if exceeded defines a converging number
 COUNTLIM = 100  # Max amount of iterations per calculation
-SCALE = 0.05  # Scaling factor
+SCALE = 0.005  # Scaling factor
 
 DIMENSION = {  # Dimensions of the coordinate system (-x, x, -y, y)
     "-x": int(-2 * 1/SCALE),
@@ -72,11 +72,12 @@ def main():
     plt.xlim(-2, 2)
     plt.ylim(-2, 2)
 
-    plt.axhline(0, color='black', linewidth=0.5)
-    plt.axvline(0, color='black', linewidth=0.5)
+    # plt.axhline(0, color='black', linewidth=0.5)
+    # plt.axvline(0, color='black', linewidth=0.5)
+    # plt.grid(False, which='both')
 
-    plt.grid(True, which='both')
-    plt.scatter(x_coords, y_coords, color='red', s=3)
+    plt.title("A Mandelbrot set visualization")
+    plt.scatter(x_coords, y_coords, color='red', s=3, marker="s")
 
     plt.show()
 
