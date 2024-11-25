@@ -1,6 +1,7 @@
+import argparse
 import matplotlib.pyplot as plt
 
-CONLIMIT = 100  # Limit that if exceeded defines a converging number
+CONLIMIT = 50  # Limit that if exceeded defines a converging number
 COUNTLIM = 200  # Max amount of iterations per calculation
 SCALE = 0.005  # Scaling factor
 DIM_FACTOR = 1 / SCALE  # Dimension factor
@@ -108,12 +109,28 @@ def main_t():
     return
 
 
-def main():
-    main_t()
-
-
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Parse optional command line arguments."
+    )
+
+    parser.add_argument(
+        '-t', '--terminal',
+        action='store_true',
+        help='Show in terminal'
+    )
+    parser.add_argument(
+        '-p', '--plot',
+        action='store_true',
+        help='Plot using matplotlib'
+    )
+
+    args = parser.parse_args()
+
     try:
-        main()
+        if not args.terminal and not args.plot or args.plot:
+            main_p()
+        else:
+            main_t()
     except KeyboardInterrupt:
         pass
