@@ -1,14 +1,14 @@
-conlim = 100 # Limit that if exceeded defines a converging number
-countlim = 100 # Max amount of iterations per calculation
-count = 0
+import matplotlib.pyplot as plt
 
-scale = 0.1 # Scaling factor
+CONLIMIT = 100  # Limit that if exceeded defines a converging number
+COUNTLIM = 100  # Max amount of iterations per calculation
+SCALE = 0.05  # Scaling factor
 
-DIMENSION = { # Dimensions of the coordinate system (-x, x, -y, y)
-    "-x" : int(-2 * 1/scale),
-    "x" : int(2 * 1/scale),
-    "-y" : int(-2 * 1/scale),
-    "y" : int(2 * 1/scale)
+DIMENSION = {  # Dimensions of the coordinate system (-x, x, -y, y)
+    "-x": int(-2 * 1/SCALE),
+    "x": int(2 * 1/SCALE),
+    "-y": int(-2 * 1/SCALE),
+    "y": int(2 * 1/SCALE)
 }
 
 COLORS = [
@@ -26,18 +26,18 @@ RESET = "\033[0m"
 def to_full_width(text):
     full_width_text = ''
     for char in text:
-        if '!' <= char <= '~':  # Check if the character is in the ASCII printable range
-            full_width_text += chr(ord(char) + 0xFEE0)  # Convert to full-width by adding offset
+        if '!' <= char <= '~':
+            full_width_text += chr(ord(char) + 0xFEE0)
         else:
-            full_width_text += char  # Keep non-ASCII characters unchanged
+            full_width_text += char
     return full_width_text
 
 
 def get_color(count: int) -> str:
-    if count >= countlim:
+    if count >= COUNTLIM:
         return "\033[30m" + to_full_width("█") + RESET
 
-    color_index = int(count / (countlim / len(COLORS)))
+    color_index = int(count / (COUNTLIM / len(COLORS)))
 
     color_index = min(color_index, len(COLORS) - 1)
 
@@ -49,19 +49,36 @@ def calc(x: float, y: float):
     z = 0
     count = 0
 
-    while abs(z) < conlim and count < countlim:
-        z_new = z ** 2 + c
-        z = z_new
+    while abs(z) < CONLIMIT and count < COUNTLIM:
+        z = z ** 2 + c
         count += 1
 
     return int(count)
 
 
 def main():
-    for i in [x * scale for x in range(DIMENSION["-y"], DIMENSION["y"], 1)]:
-        for j in [y * scale for y in range(DIMENSION["-x"], DIMENSION["x"], 1)]:
-            print(get_color(calc(x = j, y = i)), end=" ")
-            #print(f"{calc(x = j, y = i):003}", end=" ")
-        print()
+    x_coords = []
+    y_coords = []
+    for i in [x * SCALE for x in range(DIMENSION["-y"], DIMENSION["y"], 1)]:
+        for j in [y * SCALE for y in range(DIMENSION["-x"], DIMENSION["x"], 1)]:
+            # print(get_color(calc(x=j, y=i)), end=" ")
+            # print(f"{calc(x = j, y = i):003}", end=" ")
+            result = calc(x=j, y=i)
+            if result < CONLIMIT:
+                x_coords.append(j)
+                y_coords.append(i)
+        # print()
+
+    plt.xlim(-2, 2)
+    plt.ylim(-2, 2)
+
+    plt.axhline(0, color='black', linewidth=0.5)
+    plt.axvline(0, color='black', linewidth=0.5)
+
+    plt.grid(True, which='both')
+    plt.scatter(x_coords, y_coords, color='red', s=3)
+
+    plt.show()
+
 
 main()
