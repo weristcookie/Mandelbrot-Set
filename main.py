@@ -98,7 +98,7 @@ def main_p(is_export: bool, exponent: float) -> None:
 
     plt.title(
         rf"A Mandelbrot set visualization using "
-        rf"$z_{{n+1}} = z_n^{{{exponent}}} + c$"
+        rf"$z_{{n+1}} = z_n^{{{round(exponent, 1)}}} + c$"
     )
 
     plt.gca().set_facecolor('black')
@@ -162,7 +162,7 @@ if __name__ == "__main__":
 
     try:
         if not args.terminal and not args.plot or args.plot:
-            is_gif = False  # for now
+            is_gif = True  # for now
             if is_gif:
                 for exponent in np.arange(2, 8.1, 0.1):  # for now
                     # pass as par
