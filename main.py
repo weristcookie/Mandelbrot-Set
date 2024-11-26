@@ -31,6 +31,15 @@ COLORS = [
 RESET = "\033[0m"
 
 
+def setDimension(factor: float, x: float, mx: float, y: float, my: float):  # TODO
+    DIMENSION = {
+        "x": round(x * 1/factor),
+        "-x": round(mx * 1/factor),
+        "y": round(y * 1/factor),
+        "-y": round(my * 1/factor),
+    }
+
+
 def to_full_width(text):
     full_width_text = ''
     for char in text:
@@ -87,7 +96,10 @@ def main_p(is_export: bool, exponent: float) -> None:
     # plt.axvline(0, color='black', linewidth=0.5)
     # plt.grid(False, which='both')
 
-    plt.title("A Mandelbrot set visualization")
+    plt.title(
+        rf"A Mandelbrot set visualization using "
+        rf"$z_{{n+1}} = z_n^{{{exponent}}} + c$"
+    )
 
     plt.gca().set_facecolor('black')
     plt.scatter(x_coords, y_coords, marker="o", s=0.05, c=colors, cmap='magma')
@@ -101,19 +113,20 @@ def main_p(is_export: bool, exponent: float) -> None:
         os.makedirs("output", exist_ok=True)
         filename = f"output-{round(exponent, 1)}.png"
         plt.savefig(os.path.join("output", filename))
+        # ffmpeg -framerate 10 -pattern_type glob -i "output-*.png" -vf "scale=iw:-1:flags=lanczos" -loop 0 output.gif
     else:
         plt.show()
 
     plt.clf()
 
 
-def main_t(factor: float) -> None:
-    if not factor:
+def main_t(scaling: float) -> None:
+    if not scaling:
         width, height = os.get_terminal_size()
-        factor = (85 * 0.094) / width
-        
-    for i in [x * factor for x in range(int(DIMENSION['-y'] * 1/factor), int(DIMENSION['y'] * 1/factor) + 1, 1)]:
-        for j in [y * factor for y in range(int(DIMENSION['-x'] * 1/factor), int(DIMENSION['x'] * 1/factor), 1)]:
+        scaling = (85 * 0.094) / width
+
+    for i in [x * scaling for x in range(int(DIMENSION['-y'] * 1/scaling), int(DIMENSION['y'] * 1/scaling) + 1, 1)]:
+        for j in [y * scaling for y in range(int(DIMENSION['-x'] * 1/scaling), int(DIMENSION['x'] * 1/scaling), 1)]:
             print(get_color(calc(x=j, y=i)), end=" ")
             # print(f"{calc(x = j, y = i):003}", end=" ")
         print()
@@ -135,9 +148,9 @@ if __name__ == "__main__":
         help='Plot using matplotlib'
     )
     parser.add_argument(
-        '-f', '--factor',
+        '-s', '--scaling',
         type=float,
-        help='Bla'
+        help='Set scaling'
     )
     parser.add_argument(
         '-e', '--export',
@@ -149,18 +162,15 @@ if __name__ == "__main__":
 
     try:
         if not args.terminal and not args.plot or args.plot:
-            for exponent in np.arange(2, 3, 0.1):  # for now
-                main_p(is_export=args.export, exponent=exponent)
+            is_gif = False  # for now
+            if is_gif:
+                for exponent in np.arange(2, 8.1, 0.1):  # for now
+                    # pass as par
+                    filename = f"output-{round(exponent, 1)}.png"
+                    print(f"Processing {filename}...")
+                    main_p(is_export=args.export, exponent=exponent)
+            main_p(is_export=args.export, exponent=2)
         else:
-            main_t(args.factor)
+            main_t(args.scaling)
     except KeyboardInterrupt:
         pass
-    
-    
-def setDimension(factor: float, x: float, mx: float, y: float, my: float):
-    DIMENSION = {
-        "x": round(x * 1/factor),
-        "-x": round(mx * 1/factor),
-        "y": round(y * 1/factor),
-        "-y": round(my * 1/factor),
-    }
