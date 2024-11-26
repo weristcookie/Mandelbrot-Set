@@ -7,19 +7,6 @@ from concurrent.futures import ProcessPoolExecutor
 
 CONLIMIT = 50  # Limit that if exceeded defines a converging number
 COUNTLIM = 100  # Max amount of iterations per calculation
-SCALE = 0.005  # Scaling factor
-DIM_FACTOR = 1 / SCALE  # Dimension factor
-
-DIMENSION = {  # Dimensions of the coordinate system (-x, x, -y, y)
-    "-x": -2,
-    "x": 2,
-    "-y": -2,
-    "y": 2,
-    "-xf": round(-2 * DIM_FACTOR),
-    "xf": round(2 * DIM_FACTOR),
-    "-yf": round(-2 * DIM_FACTOR),
-    "yf": round(2 * DIM_FACTOR),
-}
 
 COLORS = [
     "\033[34m",  # Blue
@@ -32,13 +19,16 @@ COLORS = [
 
 RESET = "\033[0m"
 
+dimension = {}  # Dimensions of the coordinate system (x, -x, y, -y)
 
-def setDimension(factor: float, x: float, mx: float, y: float, my: float):  # TODO
-    DIMENSION = {
-        "x": round(x * 1/factor),
-        "-x": round(mx * 1/factor),
-        "y": round(y * 1/factor),
-        "-y": round(my * 1/factor),
+
+def set_dimension(scaling: float, x: float, mx: float, y: float, my: float):
+    global dimension
+    dimension = {
+        "x": round(x / scaling),
+        "-x": round(mx / scaling),
+        "y": round(y / scaling),
+        "-y": round(my / scaling),
     }
 
 
@@ -56,9 +46,7 @@ def get_color(count: int) -> str:
     if count >= COUNTLIM:
         return "\033[30m" + to_full_width(chr(0x2588)) + RESET
 
-    color_index = int(count / (COUNTLIM / len(COLORS)))
-
-    color_index = min(color_index, len(COLORS) - 1)
+    color_index = min(int(count / (COUNTLIM / len(COLORS))), len(COLORS) - 1)
 
     return COLORS[color_index] + to_full_width(chr(0x2588)) + RESET
 
@@ -75,13 +63,19 @@ def calc(x: float, y: float, exponent: int = 2):
     return int(count)
 
 
-def main_p(is_export: bool, exponent: float) -> None:
+def main_p(is_export: bool, exponent: float, scaling: float) -> None:
+    # If scaling is omitted, default scaling is used (0.005)
+    if not scaling:
+        scaling = 0.005
+
+    set_dimension(scaling, 2, -2, 2, -2)
+
     x_coords = []
     y_coords = []
     colors = []
 
-    for i in [x * SCALE for x in range(DIMENSION['-yf'], DIMENSION['yf'], 1)]:
-        for j in [y * SCALE for y in range(DIMENSION['-xf'], DIMENSION['xf'], 1)]:
+    for i in [x * scaling for x in range(dimension['-y'], dimension['y'], 1)]:
+        for j in [y * scaling for y in range(dimension['-x'], dimension['x'], 1)]:
             # print(get_color(calc(x=j, y=i)), end=" ")
             # print(f"{calc(x = j, y = i):003}", end=" ")
             result = calc(x=j, y=i, exponent=exponent)
@@ -91,8 +85,9 @@ def main_p(is_export: bool, exponent: float) -> None:
                 colors.append(result)
         # print()
 
-    plt.xlim(DIMENSION['-x'], DIMENSION['x'])
-    plt.ylim(DIMENSION['-y'], DIMENSION['y'])
+    # Dimension already uses scaled values, but original values are needed here
+    plt.xlim(round(dimension['-x'] * scaling), round(dimension['x'] * scaling))
+    plt.ylim(round(dimension['-y'] * scaling), round(dimension['y'] * scaling))
 
     # plt.axhline(0, color='black', linewidth=0.5)
     # plt.axvline(0, color='black', linewidth=0.5)
@@ -122,12 +117,15 @@ def main_p(is_export: bool, exponent: float) -> None:
 
 
 def main_t(scaling: float) -> None:
+    # If scaling is omitted, automatic scaling is used
     if not scaling:
-        width, height = os.get_terminal_size()
+        width, _ = os.get_terminal_size()
         scaling = (85 * 0.094) / width
 
-    for i in [x * scaling for x in range(int(DIMENSION['-y'] * 1/scaling), int(DIMENSION['y'] * 1/scaling) + 1, 1)]:
-        for j in [y * scaling for y in range(int(DIMENSION['-x'] * 1/scaling), int(DIMENSION['x'] * 1/scaling), 1)]:
+    set_dimension(scaling, 2, -2, 2, -2)
+
+    for i in [x * scaling for x in range(dimension['-y'], dimension['y'] + 1, 1)]:
+        for j in [y * scaling for y in range(dimension['-x'], dimension['x'], 1)]:
             print(get_color(calc(x=j, y=i)), end=" ")
             # print(f"{calc(x = j, y = i):003}", end=" ")
         print()
@@ -148,6 +146,8 @@ if __name__ == "__main__":
         action='store_true',
         help='Plot using matplotlib'
     )
+    # Scaling refers to amount of rendered coordinates / coordinate density
+    # Lower values -> higher density
     parser.add_argument(
         '-s', '--scaling',
         type=float,
@@ -163,7 +163,7 @@ if __name__ == "__main__":
 
     try:
         if not args.terminal and not args.plot or args.plot:
-            is_gif = True  # for now
+            is_gif = False  # for now
             if is_gif:
                 exponents = np.arange(2, 4.1, 0.05)  # for now
                 with ProcessPoolExecutor(max_workers=os.cpu_count()) as executor:
@@ -188,7 +188,8 @@ if __name__ == "__main__":
                 ]
                 subprocess.call(ffmpeg_command)
 
-            main_p(is_export=args.export, exponent=2)
+            else:
+                main_p(is_export=args.export, exponent=2, scaling=args.scaling)
 
         else:
             main_t(args.scaling)
