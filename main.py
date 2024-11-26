@@ -100,7 +100,7 @@ def main_p(is_export: bool, exponent: float) -> None:
 
     plt.title(
         rf"A Mandelbrot set visualization using "
-        rf"$z_{{n+1}} = z_n^{{{round(exponent, 1)}}} + c$"
+        rf"$z_{{n+1}} = z_n^{{{round(exponent, 2)}}} + c$"
     )
 
     plt.gca().set_facecolor('black')
@@ -113,7 +113,7 @@ def main_p(is_export: bool, exponent: float) -> None:
 
     if is_export:
         os.makedirs("output", exist_ok=True)
-        filename = f"output-{round(exponent, 1)}.png"
+        filename = f"output-{round(exponent, 2)}.png"
         plt.savefig(os.path.join("output", filename))
     else:
         plt.show()
@@ -165,7 +165,7 @@ if __name__ == "__main__":
         if not args.terminal and not args.plot or args.plot:
             is_gif = True  # for now
             if is_gif:
-                exponents = np.arange(2, 3.1, 0.1)  # for now
+                exponents = np.arange(2, 4.1, 0.05)  # for now
                 with ProcessPoolExecutor(max_workers=os.cpu_count()) as executor:
                     futures = [
                         executor.submit(
