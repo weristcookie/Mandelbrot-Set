@@ -63,11 +63,7 @@ def calc(x: float, y: float, exponent: int = 2):
     return int(count)
 
 
-def main_p(is_export: bool, exponent: float, scaling: float) -> None:
-    # If scaling is omitted, default scaling is used (0.005)
-    if not scaling:
-        scaling = 0.005
-
+def main_p(is_export: bool, exponent: float, scaling: float = 0.005) -> None:
     set_dimension(scaling, 2, -2, 2, -2)
 
     x_coords = []
@@ -120,7 +116,7 @@ def main_t(scaling: float) -> None:
     # If scaling is omitted, automatic scaling is used
     if not scaling:
         width, _ = os.get_terminal_size()
-        scaling = (85 * 0.094) / width
+        scaling = (85 * 0.096) / width
 
     set_dimension(scaling, 2, -2, 2, -2)
 
@@ -131,11 +127,36 @@ def main_t(scaling: float) -> None:
         print()
 
 
+def export_gif(start: float, stop: float, exp_step: float = 0.05, scaling: float = 0.005):  # Stop: exclusive
+    exponents = np.arange(start, stop, exp_step)  # for now
+    with ProcessPoolExecutor(max_workers=os.cpu_count()) as executor:
+        futures = [
+            executor.submit(main_p, is_export=args.export,
+                            exponent=exponent, scaling=scaling)
+            for exponent in exponents
+        ]
+
+        for future in futures:
+            future.result()
+
+    ffmpeg_command = [
+        "ffmpeg",
+        "-framerate", "5",
+        "-pattern_type", "glob",
+        "-i", "output/output-*.png",
+        "-vf", "scale=iw:-1:flags=lanczos",
+        "-loop", "0",
+        "-y",
+        "output.gif"
+    ]
+    subprocess.call(ffmpeg_command)
+    return
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Parse optional command line arguments."
     )
-
     parser.add_argument(
         '-t', '--terminal',
         action='store_true',
@@ -155,43 +176,31 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '-e', '--export',
-        action='store_true',
+        type=str,
+        choices=['gif', 'png'],
         help='Show in terminal'
     )
 
     args = parser.parse_args()
 
     try:
-        if not args.terminal and not args.plot or args.plot:
-            is_gif = False  # for now
-            if is_gif:
-                exponents = np.arange(2, 4.1, 0.05)  # for now
-                with ProcessPoolExecutor(max_workers=os.cpu_count()) as executor:
-                    futures = [
-                        executor.submit(
-                            main_p, is_export=args.export, exponent=exponent)
-                        for exponent in exponents
-                    ]
+        # if not args.terminal and not args.plot or args.plot:
+        match (args):
+            case _ if args.terminal:
+                main_t(args.scaling)
 
-                    for future in futures:
-                        future.result()
-
-                ffmpeg_command = [
-                    "ffmpeg",
-                    "-framerate", "5",
-                    "-pattern_type", "glob",
-                    "-i", "output/output-*.png",
-                    "-vf", "scale=iw:-1:flags=lanczos",
-                    "-loop", "0",
-                    "-y",
-                    "output.gif"
-                ]
-                subprocess.call(ffmpeg_command)
-
-            else:
+            case _ if args.plot:
                 main_p(is_export=args.export, exponent=2, scaling=args.scaling)
 
-        else:
-            main_t(args.scaling)
+            case _ if args.export:
+                if args.export == "gif":
+                    export_gif(start=2.0, stop=3.1,
+                               exp_step=0.1, scaling=0.005)
+                elif args.export == "png":
+                    main_p(is_export=True, exponent=2, scaling=0.005)
+
+            case _:
+                main_p(is_export=args.export, exponent=2, scaling=args.scaling)
+
     except KeyboardInterrupt:
         pass
