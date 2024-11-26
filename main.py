@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 CONLIMIT = 50  # Limit that if exceeded defines a converging number
-COUNTLIM = 200  # Max amount of iterations per calculation
+COUNTLIM = 100  # Max amount of iterations per calculation
 SCALE = 0.005  # Scaling factor
 DIM_FACTOR = 1 / SCALE  # Dimension factor
 
@@ -107,9 +107,13 @@ def main_p(is_export: bool, exponent: float) -> None:
     plt.clf()
 
 
-def main_t(factor: int) -> None:
-    for i in [x * SCALE for x in range(DIMENSION['-yf'], DIMENSION['yf'], 1)]:
-        for j in [y * SCALE for y in range(DIMENSION['-xf'], DIMENSION['xf'], 1)]:
+def main_t(factor: float) -> None:
+    if not factor:
+        width, height = os.get_terminal_size()
+        factor = (85 * 0.094) / width
+        
+    for i in [x * factor for x in range(int(DIMENSION['-y'] * 1/factor), int(DIMENSION['y'] * 1/factor) + 1, 1)]:
+        for j in [y * factor for y in range(int(DIMENSION['-x'] * 1/factor), int(DIMENSION['x'] * 1/factor), 1)]:
             print(get_color(calc(x=j, y=i)), end=" ")
             # print(f"{calc(x = j, y = i):003}", end=" ")
         print()
@@ -132,7 +136,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '-f', '--factor',
-        type=int,
+        type=float,
         help='Bla'
     )
     parser.add_argument(
@@ -151,3 +155,12 @@ if __name__ == "__main__":
             main_t(args.factor)
     except KeyboardInterrupt:
         pass
+    
+    
+def setDimension(factor: float, x: float, mx: float, y: float, my: float):
+    DIMENSION = {
+        "x": round(x * 1/factor),
+        "-x": round(mx * 1/factor),
+        "y": round(y * 1/factor),
+        "-y": round(my * 1/factor),
+    }
