@@ -2,6 +2,7 @@ import argparse
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+from concurrent.futures import ProcessPoolExecutor
 
 CONLIMIT = 50  # Limit that if exceeded defines a converging number
 COUNTLIM = 100  # Max amount of iterations per calculation
@@ -164,11 +165,17 @@ if __name__ == "__main__":
         if not args.terminal and not args.plot or args.plot:
             is_gif = True  # for now
             if is_gif:
-                for exponent in np.arange(2, 8.1, 0.1):  # for now
-                    # pass as par
-                    filename = f"output-{round(exponent, 1)}.png"
-                    print(f"Processing {filename}...")
-                    main_p(is_export=args.export, exponent=exponent)
+                exponents = np.arange(2, 8.1, 0.1)  # for now
+                with ProcessPoolExecutor(max_workers=os.cpu_count()) as executor:
+                    futures = [
+                        executor.submit(
+                            main_p, is_export=args.export, exponent=exponent)
+                        for exponent in exponents
+                    ]
+
+                    for future in futures:
+                        future.result()
+
             main_p(is_export=args.export, exponent=2)
         else:
             main_t(args.scaling)
