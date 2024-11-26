@@ -63,7 +63,10 @@ def calc(x: float, y: float, exponent: int = 2):
     return int(count)
 
 
-def main_p(is_export: bool, exponent: float, scaling: float = 0.005) -> None:
+def main_p(is_export: bool, exponent: float, scaling: float) -> None:
+    if not scaling:
+        scaling = 0.005
+
     set_dimension(scaling, 2, -2, 2, -2)
 
     x_coords = []
