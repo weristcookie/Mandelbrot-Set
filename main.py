@@ -1,5 +1,7 @@
 import argparse
+import os
 import matplotlib.pyplot as plt
+import numpy as np
 
 CONLIMIT = 50  # Limit that if exceeded defines a converging number
 COUNTLIM = 200  # Max amount of iterations per calculation
@@ -50,19 +52,19 @@ def get_color(count: int) -> str:
     return COLORS[color_index] + to_full_width(chr(0x2588)) + RESET
 
 
-def calc(x: float, y: float):
+def calc(x: float, y: float, exponent: int = 2):
     c = complex(x, y)
     z = 0
     count = 0
 
     while abs(z) < CONLIMIT and count < COUNTLIM:
-        z = z ** 2 + c
+        z = z ** exponent + c
         count += 1
 
     return int(count)
 
 
-def main_p() -> None:
+def main_p(is_export: bool, exponent: float) -> None:
     x_coords = []
     y_coords = []
     colors = []
@@ -71,7 +73,7 @@ def main_p() -> None:
         for j in [y * SCALE for y in range(DIMENSION['-xf'], DIMENSION['xf'], 1)]:
             # print(get_color(calc(x=j, y=i)), end=" ")
             # print(f"{calc(x = j, y = i):003}", end=" ")
-            result = calc(x=j, y=i)
+            result = calc(x=j, y=i, exponent=exponent)
             if result < CONLIMIT:
                 x_coords.append(j)
                 y_coords.append(i)
@@ -95,7 +97,14 @@ def main_p() -> None:
 
     plt.colorbar()
 
-    plt.show()
+    if is_export:
+        os.makedirs("output", exist_ok=True)
+        filename = f"output-{round(exponent, 1)}.png"
+        plt.savefig(os.path.join("output", filename))
+    else:
+        plt.show()
+
+    plt.clf()
 
 
 def main_t(factor: int) -> None:
@@ -126,12 +135,18 @@ if __name__ == "__main__":
         type=int,
         help='Bla'
     )
+    parser.add_argument(
+        '-e', '--export',
+        action='store_true',
+        help='Show in terminal'
+    )
 
     args = parser.parse_args()
 
     try:
         if not args.terminal and not args.plot or args.plot:
-            main_p()
+            for exponent in np.arange(2, 3, 0.1):  # for now
+                main_p(is_export=args.export, exponent=exponent)
         else:
             main_t(args.factor)
     except KeyboardInterrupt:
