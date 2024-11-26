@@ -1,5 +1,6 @@
 import argparse
 import os
+import subprocess
 import matplotlib.pyplot as plt
 import numpy as np
 from concurrent.futures import ProcessPoolExecutor
@@ -114,7 +115,6 @@ def main_p(is_export: bool, exponent: float) -> None:
         os.makedirs("output", exist_ok=True)
         filename = f"output-{round(exponent, 1)}.png"
         plt.savefig(os.path.join("output", filename))
-        # ffmpeg -framerate 10 -pattern_type glob -i "output-*.png" -vf "scale=iw:-1:flags=lanczos" -loop 0 output.gif
     else:
         plt.show()
 
@@ -165,7 +165,7 @@ if __name__ == "__main__":
         if not args.terminal and not args.plot or args.plot:
             is_gif = True  # for now
             if is_gif:
-                exponents = np.arange(2, 8.1, 0.1)  # for now
+                exponents = np.arange(2, 3.1, 0.1)  # for now
                 with ProcessPoolExecutor(max_workers=os.cpu_count()) as executor:
                     futures = [
                         executor.submit(
@@ -176,7 +176,20 @@ if __name__ == "__main__":
                     for future in futures:
                         future.result()
 
+                ffmpeg_command = [
+                    "ffmpeg",
+                    "-framerate", "10",
+                    "-pattern_type", "glob",
+                    "-i", "output/output-*.png",
+                    "-vf", "scale=iw:-1:flags=lanczos",
+                    "-loop", "0",
+                    "-y",
+                    "output.gif"
+                ]
+                subprocess.call(ffmpeg_command)
+
             main_p(is_export=args.export, exponent=2)
+
         else:
             main_t(args.scaling)
     except KeyboardInterrupt:
