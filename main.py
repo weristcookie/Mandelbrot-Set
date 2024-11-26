@@ -178,7 +178,7 @@ if __name__ == "__main__":
 
                 ffmpeg_command = [
                     "ffmpeg",
-                    "-framerate", "10",
+                    "-framerate", "5",
                     "-pattern_type", "glob",
                     "-i", "output/output-*.png",
                     "-vf", "scale=iw:-1:flags=lanczos",
