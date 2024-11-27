@@ -90,6 +90,9 @@ def main_p(is_export: bool, exponent: float, scaling: float) -> None:
         rf"A Mandelbrot set visualization using "
         rf"$z_{{n+1}} = z_n^{{{round(exponent, 2)}}} + c$"
     )
+    
+    plt.close()
+    plt.figure(num="Mandelbrot Visualization")
 
     plt.gca().set_facecolor('black')
     plt.scatter(x_coords, y_coords, marker="o", s=0.05, c=colors, cmap='magma')
