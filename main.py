@@ -8,6 +8,9 @@ from concurrent.futures import ProcessPoolExecutor
 CONLIMIT = 50  # Limit that if exceeded defines a converging number
 COUNTLIM = 100  # Max amount of iterations per calculation
 
+FULLBLOCK = chr(0x2588)  # Full block ASCII character
+RESET = "\033[0m"
+
 COLORS = [
     "\033[34m",  # Blue
     "\033[31m",  # Red
@@ -17,12 +20,10 @@ COLORS = [
     "\033[97m"   # White
 ]
 
-RESET = "\033[0m"
-
 dimension = {}  # Dimensions of the coordinate system (x, -x, y, -y)
 
 
-def set_dimension(scaling: float, x: float, mx: float, y: float, my: float):
+def set_dimension(scaling: float, x: float, mx: float, y: float, my: float) -> None:
     global dimension
     dimension = {
         "x": round(x / scaling),
@@ -32,26 +33,17 @@ def set_dimension(scaling: float, x: float, mx: float, y: float, my: float):
     }
 
 
-def to_full_width(text):
-    full_width_text = ''
-    for char in text:
-        if '!' <= char <= '~':
-            full_width_text += chr(ord(char) + 0xFEE0)
-        else:
-            full_width_text += char
-    return full_width_text
-
-
 def get_color(count: int) -> str:
+    # If iteration limit is exceeded, coordinate is colored black
     if count >= COUNTLIM:
-        return "\033[30m" + to_full_width(chr(0x2588)) + RESET
+        return "\033[30m" + FULLBLOCK + RESET
 
-    color_index = min(int(count / (COUNTLIM / len(COLORS))), len(COLORS) - 1)
+    # Coordinate is assigned a color depending on iteration number
+    color_index = int(count / (COUNTLIM / len(COLORS)))
+    return COLORS[color_index] + FULLBLOCK + RESET
 
-    return COLORS[color_index] + to_full_width(chr(0x2588)) + RESET
 
-
-def calc(x: float, y: float, exponent: int = 2):
+def calc(x: float, y: float, exponent: int = 2) -> int:
     c = complex(x, y)
     z = 0
     count = 0
@@ -130,7 +122,7 @@ def main_t(scaling: float) -> None:
         print()
 
 
-def export_gif(start: float, stop: float, exp_step: float = 0.05, scaling: float = 0.005):  # Stop: exclusive
+def export_gif(start: float, stop: float, exp_step: float = 0.05, scaling: float = 0.005) -> None:  # Stop: exclusive
     exponents = np.arange(start, stop, exp_step)  # for now
     with ProcessPoolExecutor(max_workers=os.cpu_count()) as executor:
         futures = [
@@ -187,7 +179,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        # if not args.terminal and not args.plot or args.plot:
         match (args):
             case _ if args.terminal:
                 main_t(args.scaling)
@@ -200,7 +191,7 @@ if __name__ == "__main__":
                     export_gif(start=2.0, stop=3.1,
                                exp_step=0.1, scaling=0.005)
                 elif args.export == "png":
-                    main_p(is_export=True, exponent=2, scaling=0.005)
+                    main_p(is_export=True, exponent=2, scaling=args.scaling)
 
             case _:
                 main_p(is_export=args.export, exponent=2, scaling=args.scaling)
