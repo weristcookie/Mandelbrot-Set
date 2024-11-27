@@ -65,16 +65,18 @@ def main_p(is_export: bool, exponent: float, scaling: float) -> None:
     y_coords = []
     colors = []
 
-    for i in [x * scaling for x in range(dimension['-y'], dimension['y'], 1)]:
+    for i in [x * scaling for x in range(0, dimension['y'], 1)]:
         for j in [y * scaling for y in range(dimension['-x'], dimension['x'], 1)]:
-            # print(get_color(calc(x=j, y=i)), end=" ")
-            # print(f"{calc(x = j, y = i):003}", end=" ")
             result = calc(x=j, y=i, exponent=exponent)
+
             if result < CONLIMIT:
                 x_coords.append(j)
                 y_coords.append(i)
                 colors.append(result)
-        # print()
+                if i != 0:
+                    x_coords.append(j)
+                    y_coords.append(-i)
+                    colors.append(result)
 
     # Dimension already uses scaled values, but original values are needed here
     plt.xlim(round(dimension['-x'] * scaling), round(dimension['x'] * scaling))
@@ -123,7 +125,7 @@ def main_t(scaling: float) -> None:
 
 
 def export_gif(start: float, stop: float, exp_step: float = 0.05, scaling: float = 0.005) -> None:  # Stop: exclusive
-    exponents = np.arange(start, stop, exp_step)  # for now
+    exponents = np.arange(start, stop, exp_step)
     with ProcessPoolExecutor(max_workers=os.cpu_count()) as executor:
         futures = [
             executor.submit(main_p, is_export=args.export,
@@ -188,7 +190,7 @@ if __name__ == "__main__":
 
             case _ if args.export:
                 if args.export == "gif":
-                    export_gif(start=2.0, stop=3.1,
+                    export_gif(start=2.0, stop=4.1,
                                exp_step=0.1, scaling=0.005)
                 elif args.export == "png":
                     main_p(is_export=True, exponent=2, scaling=args.scaling)
