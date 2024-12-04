@@ -78,7 +78,7 @@ def main_p(is_export: bool, exponent: float, scaling: float) -> None:
                     y_coords.append(-i)
                     colors.append(result)
 
-    # Dimension already uses scaled values, but original values are needed here
+    # Dimension already uses scaled values, but unscaled values are needed here
     plt.xlim(round(dimension['-x'] * scaling), round(dimension['x'] * scaling))
     plt.ylim(round(dimension['-y'] * scaling), round(dimension['y'] * scaling))
 
@@ -86,13 +86,13 @@ def main_p(is_export: bool, exponent: float, scaling: float) -> None:
     # plt.axvline(0, color='black', linewidth=0.5)
     # plt.grid(False, which='both')
 
+    plt.close()
+    plt.figure(num="Mandelbrot Visualization")
+
     plt.title(
         rf"A Mandelbrot set visualization using "
         rf"$z_{{n+1}} = z_n^{{{round(exponent, 2)}}} + c$"
     )
-    
-    plt.close()
-    plt.figure(num="Mandelbrot Visualization")
 
     plt.gca().set_facecolor('black')
     plt.scatter(x_coords, y_coords, marker="o", s=0.05, c=colors, cmap='magma')
